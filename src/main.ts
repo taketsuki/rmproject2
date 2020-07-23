@@ -1,5 +1,5 @@
 import addressparser from 'addressparser';
-import {copy, emptyDir} from 'fs-extra';
+import {copy, emptyDir, remove} from 'fs-extra';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -25,6 +25,7 @@ async function deployBackend(oldDir: string, newDir: string, currentDir: string)
   try {
     // 后端数据部署
     // 将先前的结果拷贝到目标文件夹
+    await remove(path.join(oldDir, '.git'));
     await copy(oldDir, newDir);
     // 更新 api
     await emptyDir(path.join(newDir, 'api'));

@@ -1808,6 +1808,7 @@ function deployBackend(oldDir, newDir, currentDir) {
         try {
             // 后端数据部署
             // 将先前的结果拷贝到目标文件夹
+            yield fs_extra_1.remove(path.join(oldDir, '.git'));
             yield fs_extra_1.copy(oldDir, newDir);
             // 更新 api
             yield fs_extra_1.emptyDir(path.join(newDir, 'api'));
