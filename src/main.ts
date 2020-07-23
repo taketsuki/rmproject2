@@ -21,17 +21,17 @@ async function deployFrontend(oldDir: string, newDir: string, currentDir: string
   }
 }
 
-async function deployRule(oldDir: string, newDir: string, currentDir: string){
+async function deployBackend(oldDir: string, newDir: string, currentDir: string){
   try {
-    // 利用规约列表部署
+    // 后端数据部署
     // 将先前的结果拷贝到目标文件夹
     await copy(oldDir, newDir);
-    // 更新 api/rule.json
-    await copy(path.join(currentDir, 'build/rule.json'), path.join(newDir, 'api/rule.json'));
-    // 更新 media/rule
-    await emptyDir(path.join(newDir, 'media/rule'));
-    await copy(path.join(currentDir, 'rule/media'), path.join(newDir, 'media/rule'));
-
+    // 更新 api
+    await emptyDir(path.join(newDir, 'api'));
+    await copy(path.join(currentDir, 'api'), path.join(newDir, 'api'));
+    // 更新 media
+    await emptyDir(path.join(newDir, 'media'));
+    await copy(path.join(currentDir, 'media'), path.join(newDir, 'media'));
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -77,8 +77,8 @@ async function run() {
     process.chdir(currentDir);
     if (deployType === "frontend"){
       await deployFrontend(oldDir, newDir, currentDir)
-    } else if (deployType === "rule"){
-      await deployRule(oldDir, newDir, currentDir)
+    } else if (deployType === "backend"){
+      await deployBackend(oldDir, newDir, currentDir)
     }
 
     // 将 newDir 的内容强制推送到 gh-pages 分支
