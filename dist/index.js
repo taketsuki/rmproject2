@@ -1811,10 +1811,10 @@ function deployBackend(oldDir, newDir, currentDir) {
             yield fs_extra_1.copy(oldDir, newDir);
             // 更新 api
             yield fs_extra_1.emptyDir(path.join(newDir, 'api'));
-            yield fs_extra_1.copy(path.join(currentDir, 'api'), path.join(newDir, 'api'));
+            yield fs_extra_1.copy(path.join(currentDir, 'build/api'), path.join(newDir, 'api'));
             // 更新 media
             yield fs_extra_1.emptyDir(path.join(newDir, 'media'));
-            yield fs_extra_1.copy(path.join(currentDir, 'media'), path.join(newDir, 'media'));
+            yield fs_extra_1.copy(path.join(currentDir, 'build/media'), path.join(newDir, 'media'));
         }
         catch (error) {
             core.setFailed(error.message);

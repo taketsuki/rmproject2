@@ -28,10 +28,10 @@ async function deployBackend(oldDir: string, newDir: string, currentDir: string)
     await copy(oldDir, newDir);
     // 更新 api
     await emptyDir(path.join(newDir, 'api'));
-    await copy(path.join(currentDir, 'api'), path.join(newDir, 'api'));
+    await copy(path.join(currentDir, 'build/api'), path.join(newDir, 'api'));
     // 更新 media
     await emptyDir(path.join(newDir, 'media'));
-    await copy(path.join(currentDir, 'media'), path.join(newDir, 'media'));
+    await copy(path.join(currentDir, 'build/media'), path.join(newDir, 'media'));
   } catch (error) {
     core.setFailed(error.message);
   }
