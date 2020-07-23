@@ -1,0 +1,16 @@
+# https://help.github.com/en/articles/metadata-syntax-for-github-actions
+name: 'GitHub Pages'
+description: '将 rmproject2 生成的内容部署到 gh-pages 分支，原始代码基于 crazy-max 的 ghaction-github-pages 修改'
+author: 'crazy-max'
+branding:
+  color: 'green'
+  icon: 'upload-cloud'
+
+inputs:
+  deploy_type:
+    description: '部署类型，决定 gh-pages 的哪些内容将被更新'
+    required: true
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

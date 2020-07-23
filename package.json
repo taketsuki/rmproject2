@@ -1,0 +1,36 @@
+{
+  "name": "github-pages",
+  "description": "GitHub Action to deploy to GitHub Pages",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc && ncc build",
+    "pre-checkin": "yarn run format && yarn run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crazy-max/ghaction-github-pages.git"
+  },
+  "keywords": [
+    "actions",
+    "github",
+    "pages",
+    "deploy"
+  ],
+  "author": "CrazyMax",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.2.4",
+    "@actions/exec": "^1.0.4",
+    "addressparser": "^1.0.1",
+    "fs-extra": "^9.0.1"
+  },
+  "devDependencies": {
+    "@actions/io": "^1.0.2",
+    "@types/fs-extra": "^9.0.1",
+    "@types/node": "^14.0.14",
+    "@zeit/ncc": "^0.22.3",
+    "prettier": "^2.0.5",
+    "typescript": "^3.9.5",
+    "typescript-formatter": "^7.2.2"
+  }
+}
