@@ -1,5 +1,5 @@
 import addressparser from 'addressparser';
-import {copy, copySync} from 'fs-extra';
+import {copy, emptyDir} from 'fs-extra';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -9,17 +9,28 @@ import * as git from './git';
 async function deployFrontend(oldDir: string, newDir: string, currentDir: string){
   try {
     // 前端界面部署
-    const buildDir: string = 'build';
-    if (!fs.existsSync(buildDir)) {
-      core.setFailed('Build dir does not exist');
-      return;
-    }
     // 用 build 文件夹中的内容覆盖所有内容
-    await copy(path.join(currentDir, buildDir), newDir);
+    await copy(path.join(currentDir, 'build'), newDir);
     // 保留 api 文件夹
     await copy(path.join(oldDir, 'api'), path.join(newDir, 'api'));
     // 保留 media 文件夹
     await copy(path.join(oldDir, 'media'), path.join(newDir, 'media'));
+
+  } catch (error) {
+    core.setFailed(error.message);
+  }
+}
+
+async function deployRule(oldDir: string, newDir: string, currentDir: string){
+  try {
+    // 利用规约列表部署
+    // 将先前的结果拷贝到目标文件夹
+    await copy(oldDir, newDir);
+    // 更新 api/rule.json
+    await copy(path.join(currentDir, 'build/rule.json'), path.join(newDir, 'api/rule.json'));
+    // 更新 media/rule
+    await emptyDir(path.join(newDir, 'media/rule'));
+    await copy(path.join(currentDir, 'rule/media'), path.join(newDir, 'media/rule'));
 
   } catch (error) {
     core.setFailed(error.message);
@@ -66,6 +77,8 @@ async function run() {
     process.chdir(currentDir);
     if (deployType === "frontend"){
       await deployFrontend(oldDir, newDir, currentDir)
+    } else if (deployType === "rule"){
+      await deployRule(oldDir, newDir, currentDir)
     }
 
     // 将 newDir 的内容强制推送到 gh-pages 分支

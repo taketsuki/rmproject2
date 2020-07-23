@@ -1791,17 +1791,29 @@ function deployFrontend(oldDir, newDir, currentDir) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // 前端界面部署
-            const buildDir = 'build';
-            if (!fs.existsSync(buildDir)) {
-                core.setFailed('Build dir does not exist');
-                return;
-            }
             // 用 build 文件夹中的内容覆盖所有内容
-            yield fs_extra_1.copy(path.join(currentDir, buildDir), newDir);
+            yield fs_extra_1.copy(path.join(currentDir, 'build'), newDir);
             // 保留 api 文件夹
             yield fs_extra_1.copy(path.join(oldDir, 'api'), path.join(newDir, 'api'));
             // 保留 media 文件夹
             yield fs_extra_1.copy(path.join(oldDir, 'media'), path.join(newDir, 'media'));
+        }
+        catch (error) {
+            core.setFailed(error.message);
+        }
+    });
+}
+function deployRule(oldDir, newDir, currentDir) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // 利用规约列表部署
+            // 将先前的结果拷贝到目标文件夹
+            yield fs_extra_1.copy(oldDir, newDir);
+            // 更新 api/rule.json
+            yield fs_extra_1.copy(path.join(currentDir, 'build/rule.json'), path.join(newDir, 'api/rule.json'));
+            // 更新 media/rule
+            yield fs_extra_1.emptyDir(path.join(newDir, 'media/rule'));
+            yield fs_extra_1.copy(path.join(currentDir, 'rule/media'), path.join(newDir, 'media/rule'));
         }
         catch (error) {
             core.setFailed(error.message);
@@ -1845,6 +1857,9 @@ function run() {
             process.chdir(currentDir);
             if (deployType === "frontend") {
                 yield deployFrontend(oldDir, newDir, currentDir);
+            }
+            else if (deployType === "rule") {
+                yield deployRule(oldDir, newDir, currentDir);
             }
             // 将 newDir 的内容强制推送到 gh-pages 分支
             process.chdir(newDir);
