@@ -63,6 +63,7 @@ async function run() {
     await git.checkout(targetBranch);
 
     // 根据部署类型，确定如何更新 gh-pages 中的内容
+    process.chdir(currentDir);
     if (deployType === "frontend"){
       await deployFrontend(oldDir, newDir, currentDir)
     }
