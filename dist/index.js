@@ -1796,7 +1796,10 @@ function deployFrontend(oldDir, newDir, currentDir) {
             // 保留 api 文件夹
             yield fs_extra_1.copy(path.join(oldDir, 'api'), path.join(newDir, 'api'));
             // 保留 media 文件夹
+            // TODO: 后续废弃此部分处理，改用 assets
             yield fs_extra_1.copy(path.join(oldDir, 'media'), path.join(newDir, 'media'));
+            // 保留 assets 文件夹
+            yield fs_extra_1.copy(path.join(oldDir, 'assets'), path.join(newDir, 'assets'));
         }
         catch (error) {
             core.setFailed(error.message);
@@ -1814,6 +1817,7 @@ function deployBackend(oldDir, newDir, currentDir) {
             yield fs_extra_1.emptyDir(path.join(newDir, 'api'));
             yield fs_extra_1.copy(path.join(currentDir, 'build/api'), path.join(newDir, 'api'));
             // 更新 media
+            // TODO: 后续废弃此部分处理，改用 assets
             yield fs_extra_1.emptyDir(path.join(newDir, 'media'));
             yield fs_extra_1.copy(path.join(currentDir, 'build/media'), path.join(newDir, 'media'));
         }
@@ -1822,30 +1826,55 @@ function deployBackend(oldDir, newDir, currentDir) {
         }
     });
 }
+function deployAssets(oldDir, newDir, currentDir) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // 二进制数据部署
+            // 将先前的结果拷贝到目标文件夹
+            yield fs_extra_1.remove(path.join(oldDir, '.git'));
+            yield fs_extra_1.copy(oldDir, newDir);
+            // 更新 assets
+            yield fs_extra_1.emptyDir(path.join(newDir, 'assets'));
+            yield fs_extra_1.copy(path.join(currentDir, 'assets'), path.join(newDir, 'assets'));
+        }
+        catch (error) {
+            core.setFailed(error.message);
+        }
+    });
+}
+function getRemoteUrl(targetBranch) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const repo = process.env['GITHUB_REPOSITORY'] || '';
+        let remoteURL = String('https://');
+        if (process.env['GITHUB_TOKEN']) {
+            remoteURL = remoteURL.concat('x-access-token:', process.env['GITHUB_TOKEN'].trim());
+        }
+        else {
+            core.setFailed('You have to provide a GITHUB_TOKEN');
+            return '';
+        }
+        remoteURL = remoteURL.concat('@github.com/', repo, '.git');
+        const remoteBranchExists = yield git.remoteBranchExists(remoteURL, targetBranch);
+        if (!remoteBranchExists) {
+            core.setFailed('Remote branch not exist');
+            return '';
+        }
+        return remoteURL;
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const deployType = core.getInput('deploy_type');
-            const repo = process.env['GITHUB_REPOSITORY'] || '';
-            const targetBranch = git.defaults.targetBranch;
+            const targetBranch = 'gh-pages';
             const committer = git.defaults.committer;
             const author = git.defaults.author;
             const commitMessage = git.defaults.message;
             const currentDir = path.resolve('.');
             const oldDir = fs.mkdtempSync(path.join(os.tmpdir(), 'github-pages-old'));
             const newDir = fs.mkdtempSync(path.join(os.tmpdir(), 'github-pages-new'));
-            let remoteURL = String('https://');
-            if (process.env['GITHUB_TOKEN']) {
-                remoteURL = remoteURL.concat('x-access-token:', process.env['GITHUB_TOKEN'].trim());
-            }
-            else {
-                core.setFailed('You have to provide a GITHUB_TOKEN');
-                return;
-            }
-            remoteURL = remoteURL.concat('@github.com/', repo, '.git');
-            const remoteBranchExists = yield git.remoteBranchExists(remoteURL, targetBranch);
-            if (!remoteBranchExists) {
-                core.setFailed('Remote branch not exist');
+            let remoteURL = yield getRemoteUrl(targetBranch);
+            if (!remoteURL) {
                 return;
             }
             // 将当前版本的 gh-pages 拉取到 oldDir
@@ -1862,6 +1891,9 @@ function run() {
             }
             else if (deployType === "backend") {
                 yield deployBackend(oldDir, newDir, currentDir);
+            }
+            else if (deployType === "assets") {
+                yield deployAssets(oldDir, newDir, currentDir);
             }
             // 将 newDir 的内容强制推送到 gh-pages 分支
             process.chdir(newDir);
