@@ -57,6 +57,7 @@ async function deployBackendAssets(oldDir: string, newDir: string, currentDir: s
   try {
     // 将变动后的二进制数据更新到 assets 分支
     // 用 build/assets 文件夹中的内容覆盖所有内容
+    await remove(path.join(currentDir, 'build/assets', '.git'));
     await copy(path.join(currentDir, 'build/assets'), newDir);
   } catch (error) {
     core.setFailed(error.message);

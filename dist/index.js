@@ -1845,6 +1845,7 @@ function deployBackendAssets(oldDir, newDir, currentDir) {
         try {
             // 将变动后的二进制数据更新到 assets 分支
             // 用 build/assets 文件夹中的内容覆盖所有内容
+            yield fs_extra_1.remove(path.join(currentDir, 'build/assets', '.git'));
             yield fs_extra_1.copy(path.join(currentDir, 'build/assets'), newDir);
         }
         catch (error) {
