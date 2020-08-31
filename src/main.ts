@@ -1,5 +1,5 @@
 import addressparser from 'addressparser';
-import {copy, emptyDir, remove} from 'fs-extra';
+import {copy, emptyDir, remove, pathExists} from 'fs-extra';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -18,7 +18,6 @@ async function deployFrontend(oldDir: string, newDir: string, currentDir: string
     await copy(path.join(oldDir, 'media'), path.join(newDir, 'media'));
     // 保留 assets 文件夹
     await copy(path.join(oldDir, 'assets'), path.join(newDir, 'assets'));
-
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -28,7 +27,6 @@ async function deployBackend(oldDir: string, newDir: string, currentDir: string)
   try {
     // 后端数据部署
     // 将先前的结果拷贝到目标文件夹
-    await remove(path.join(oldDir, '.git'));
     await copy(oldDir, newDir);
     // 更新 api
     await emptyDir(path.join(newDir, 'api'));
@@ -46,11 +44,20 @@ async function deployAssets(oldDir: string, newDir: string, currentDir: string){
   try {
     // 二进制数据部署
     // 将先前的结果拷贝到目标文件夹
-    await remove(path.join(oldDir, '.git'));
     await copy(oldDir, newDir);
     // 更新 assets
     await emptyDir(path.join(newDir, 'assets'));
     await copy(path.join(currentDir, 'assets'), path.join(newDir, 'assets'));
+  } catch (error) {
+    core.setFailed(error.message);
+  }
+}
+
+async function deployBackendAssets(oldDir: string, newDir: string, currentDir: string){
+  try {
+    // 将变动后的二进制数据更新到 assets 分支
+    // 用 build/assets 文件夹中的内容覆盖所有内容
+    await copy(path.join(currentDir, 'build/assets'), newDir);
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -78,29 +85,34 @@ async function getRemoteUrl(targetBranch: string): Promise<string>{
 async function run() {
   try {
     const deployType: string = core.getInput('deploy_type');
-    const targetBranch: string = 'gh-pages';
+    let targetBranch: string = 'gh-pages';
     const committer: string = git.defaults.committer;
     const author: string = git.defaults.author;
     const commitMessage: string = git.defaults.message;
 
     const currentDir = path.resolve('.');
-    const oldDir = fs.mkdtempSync(path.join(os.tmpdir(), 'github-pages-old'));
-    const newDir = fs.mkdtempSync(path.join(os.tmpdir(), 'github-pages-new'));
+    if (deployType === "backend-assets"){
+      // backend/build/assets 文件夹不存在时，直接结束
+      if (!await pathExists(path.join(currentDir, 'build/assets'))){ return }
+      targetBranch = 'assets'
+    }
+    const oldDir = fs.mkdtempSync(path.join(os.tmpdir(), 'branch-old'));
+    const newDir = fs.mkdtempSync(path.join(os.tmpdir(), 'branch-new'));
 
     let remoteURL: string = await getRemoteUrl(targetBranch);
     if (!remoteURL){ return }
 
-
-    // 将当前版本的 gh-pages 拉取到 oldDir
+    // 将当前的分支内容拉取到 oldDir
     process.chdir(oldDir);
     await git.clone(remoteURL, targetBranch, '.');
+    await remove(path.join(oldDir, '.git'));
 
-    // 创建一个新的 gh-pages 分支到 newDir
+    // 创建一个空的分支到 newDir
     process.chdir(newDir);
     await git.init('.');
     await git.checkout(targetBranch);
 
-    // 根据部署类型，确定如何更新 gh-pages 中的内容
+    // 根据部署类型，确定如何更新分支中的内容
     process.chdir(currentDir);
     if (deployType === "frontend"){
       await deployFrontend(oldDir, newDir, currentDir)
@@ -108,9 +120,11 @@ async function run() {
       await deployBackend(oldDir, newDir, currentDir)
     } else if (deployType === "assets"){
       await deployAssets(oldDir, newDir, currentDir)
+    } else if (deployType === "backend-assets"){
+      await deployBackendAssets(oldDir, newDir, currentDir)
     }
 
-    // 将 newDir 的内容强制推送到 gh-pages 分支
+    // 将 newDir 的内容强制推送到目标分支
     process.chdir(newDir);
     const isDirty: boolean = await git.isDirty();
     if (!isDirty) {

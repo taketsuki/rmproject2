@@ -1811,7 +1811,6 @@ function deployBackend(oldDir, newDir, currentDir) {
         try {
             // 后端数据部署
             // 将先前的结果拷贝到目标文件夹
-            yield fs_extra_1.remove(path.join(oldDir, '.git'));
             yield fs_extra_1.copy(oldDir, newDir);
             // 更新 api
             yield fs_extra_1.emptyDir(path.join(newDir, 'api'));
@@ -1831,11 +1830,22 @@ function deployAssets(oldDir, newDir, currentDir) {
         try {
             // 二进制数据部署
             // 将先前的结果拷贝到目标文件夹
-            yield fs_extra_1.remove(path.join(oldDir, '.git'));
             yield fs_extra_1.copy(oldDir, newDir);
             // 更新 assets
             yield fs_extra_1.emptyDir(path.join(newDir, 'assets'));
             yield fs_extra_1.copy(path.join(currentDir, 'assets'), path.join(newDir, 'assets'));
+        }
+        catch (error) {
+            core.setFailed(error.message);
+        }
+    });
+}
+function deployBackendAssets(oldDir, newDir, currentDir) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // 将变动后的二进制数据更新到 assets 分支
+            // 用 build/assets 文件夹中的内容覆盖所有内容
+            yield fs_extra_1.copy(path.join(currentDir, 'build/assets'), newDir);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -1866,25 +1876,33 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const deployType = core.getInput('deploy_type');
-            const targetBranch = 'gh-pages';
+            let targetBranch = 'gh-pages';
             const committer = git.defaults.committer;
             const author = git.defaults.author;
             const commitMessage = git.defaults.message;
             const currentDir = path.resolve('.');
-            const oldDir = fs.mkdtempSync(path.join(os.tmpdir(), 'github-pages-old'));
-            const newDir = fs.mkdtempSync(path.join(os.tmpdir(), 'github-pages-new'));
+            if (deployType === "backend-assets") {
+                // backend/build/assets 文件夹不存在时，直接结束
+                if (!(yield fs_extra_1.pathExists(path.join(currentDir, 'build/assets')))) {
+                    return;
+                }
+                targetBranch = 'assets';
+            }
+            const oldDir = fs.mkdtempSync(path.join(os.tmpdir(), 'branch-old'));
+            const newDir = fs.mkdtempSync(path.join(os.tmpdir(), 'branch-new'));
             let remoteURL = yield getRemoteUrl(targetBranch);
             if (!remoteURL) {
                 return;
             }
-            // 将当前版本的 gh-pages 拉取到 oldDir
+            // 将当前的分支内容拉取到 oldDir
             process.chdir(oldDir);
             yield git.clone(remoteURL, targetBranch, '.');
-            // 创建一个新的 gh-pages 分支到 newDir
+            yield fs_extra_1.remove(path.join(oldDir, '.git'));
+            // 创建一个空的分支到 newDir
             process.chdir(newDir);
             yield git.init('.');
             yield git.checkout(targetBranch);
-            // 根据部署类型，确定如何更新 gh-pages 中的内容
+            // 根据部署类型，确定如何更新分支中的内容
             process.chdir(currentDir);
             if (deployType === "frontend") {
                 yield deployFrontend(oldDir, newDir, currentDir);
@@ -1895,7 +1913,10 @@ function run() {
             else if (deployType === "assets") {
                 yield deployAssets(oldDir, newDir, currentDir);
             }
-            // 将 newDir 的内容强制推送到 gh-pages 分支
+            else if (deployType === "backend-assets") {
+                yield deployBackendAssets(oldDir, newDir, currentDir);
+            }
+            // 将 newDir 的内容强制推送到目标分支
             process.chdir(newDir);
             const isDirty = yield git.isDirty();
             if (!isDirty) {
