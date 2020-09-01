@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as core from '@actions/core';
 import * as git from './git';
 
-async function deployFrontend(oldDir: string, newDir: string, currentDir: string){
+async function deployFrontend(oldDir: string, newDir: string, currentDir: string): Promise<string>{
   try {
     // 前端界面部署
     // 用 build 文件夹中的内容覆盖所有内容
@@ -18,9 +18,10 @@ async function deployFrontend(oldDir: string, newDir: string, currentDir: string
   } catch (error) {
     core.setFailed(error.message);
   }
+  return 'Update frontend page'
 }
 
-async function deployBackend(oldDir: string, newDir: string, currentDir: string){
+async function deployBackend(oldDir: string, newDir: string, currentDir: string): Promise<string>{
   try {
     // 后端数据部署
     // 将先前的结果拷贝到目标文件夹
@@ -31,9 +32,10 @@ async function deployBackend(oldDir: string, newDir: string, currentDir: string)
   } catch (error) {
     core.setFailed(error.message);
   }
+  return 'Update API'
 }
 
-async function deployAssets(oldDir: string, newDir: string, currentDir: string){
+async function deployAssets(oldDir: string, newDir: string, currentDir: string): Promise<string>{
   try {
     // 二进制数据部署
     // 将先前的结果拷贝到目标文件夹
@@ -44,9 +46,10 @@ async function deployAssets(oldDir: string, newDir: string, currentDir: string){
   } catch (error) {
     core.setFailed(error.message);
   }
+  return 'Update assets'
 }
 
-async function deployBackendAssets(oldDir: string, newDir: string, currentDir: string){
+async function deployBackendAssets(oldDir: string, newDir: string, currentDir: string): Promise<string>{
   try {
     // 将变动后的二进制数据更新到 assets 分支
     // 用 build/assets 文件夹中的内容覆盖所有内容
@@ -55,6 +58,7 @@ async function deployBackendAssets(oldDir: string, newDir: string, currentDir: s
   } catch (error) {
     core.setFailed(error.message);
   }
+  return 'Upload assets'
 }
 
 async function getRemoteUrl(targetBranch: string): Promise<string>{
@@ -82,7 +86,7 @@ async function run() {
     let targetBranch: string = 'gh-pages';
     const committer: string = git.defaults.committer;
     const author: string = git.defaults.author;
-    const commitMessage: string = git.defaults.message;
+    let commitMessage: string = 'Deploy to GitHub pages';
 
     const currentDir = path.resolve('.');
     if (deployType === "backend-assets"){
@@ -109,13 +113,13 @@ async function run() {
     // 根据部署类型，确定如何更新分支中的内容
     process.chdir(currentDir);
     if (deployType === "frontend"){
-      await deployFrontend(oldDir, newDir, currentDir)
+      commitMessage = await deployFrontend(oldDir, newDir, currentDir)
     } else if (deployType === "backend"){
-      await deployBackend(oldDir, newDir, currentDir)
+      commitMessage = await deployBackend(oldDir, newDir, currentDir)
     } else if (deployType === "assets"){
-      await deployAssets(oldDir, newDir, currentDir)
+      commitMessage = await deployAssets(oldDir, newDir, currentDir)
     } else if (deployType === "backend-assets"){
-      await deployBackendAssets(oldDir, newDir, currentDir)
+      commitMessage = await deployBackendAssets(oldDir, newDir, currentDir)
     }
 
     // 将 newDir 的内容强制推送到目标分支

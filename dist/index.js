@@ -1801,6 +1801,7 @@ function deployFrontend(oldDir, newDir, currentDir) {
         catch (error) {
             core.setFailed(error.message);
         }
+        return 'Update frontend page';
     });
 }
 function deployBackend(oldDir, newDir, currentDir) {
@@ -1816,6 +1817,7 @@ function deployBackend(oldDir, newDir, currentDir) {
         catch (error) {
             core.setFailed(error.message);
         }
+        return 'Update API';
     });
 }
 function deployAssets(oldDir, newDir, currentDir) {
@@ -1831,6 +1833,7 @@ function deployAssets(oldDir, newDir, currentDir) {
         catch (error) {
             core.setFailed(error.message);
         }
+        return 'Update assets';
     });
 }
 function deployBackendAssets(oldDir, newDir, currentDir) {
@@ -1844,6 +1847,7 @@ function deployBackendAssets(oldDir, newDir, currentDir) {
         catch (error) {
             core.setFailed(error.message);
         }
+        return 'Upload assets';
     });
 }
 function getRemoteUrl(targetBranch) {
@@ -1873,7 +1877,7 @@ function run() {
             let targetBranch = 'gh-pages';
             const committer = git.defaults.committer;
             const author = git.defaults.author;
-            const commitMessage = git.defaults.message;
+            let commitMessage = 'Deploy to GitHub pages';
             const currentDir = path.resolve('.');
             if (deployType === "backend-assets") {
                 // backend/build/assets 文件夹不存在时，直接结束
@@ -1899,16 +1903,16 @@ function run() {
             // 根据部署类型，确定如何更新分支中的内容
             process.chdir(currentDir);
             if (deployType === "frontend") {
-                yield deployFrontend(oldDir, newDir, currentDir);
+                commitMessage = yield deployFrontend(oldDir, newDir, currentDir);
             }
             else if (deployType === "backend") {
-                yield deployBackend(oldDir, newDir, currentDir);
+                commitMessage = yield deployBackend(oldDir, newDir, currentDir);
             }
             else if (deployType === "assets") {
-                yield deployAssets(oldDir, newDir, currentDir);
+                commitMessage = yield deployAssets(oldDir, newDir, currentDir);
             }
             else if (deployType === "backend-assets") {
-                yield deployBackendAssets(oldDir, newDir, currentDir);
+                commitMessage = yield deployBackendAssets(oldDir, newDir, currentDir);
             }
             // 将 newDir 的内容强制推送到目标分支
             process.chdir(newDir);
