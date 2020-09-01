@@ -13,9 +13,6 @@ async function deployFrontend(oldDir: string, newDir: string, currentDir: string
     await copy(path.join(currentDir, 'build'), newDir);
     // 保留 api 文件夹
     await copy(path.join(oldDir, 'api'), path.join(newDir, 'api'));
-    // 保留 media 文件夹
-    // TODO: 后续废弃此部分处理，改用 assets
-    await copy(path.join(oldDir, 'media'), path.join(newDir, 'media'));
     // 保留 assets 文件夹
     await copy(path.join(oldDir, 'assets'), path.join(newDir, 'assets'));
   } catch (error) {
@@ -31,10 +28,6 @@ async function deployBackend(oldDir: string, newDir: string, currentDir: string)
     // 更新 api
     await emptyDir(path.join(newDir, 'api'));
     await copy(path.join(currentDir, 'build/api'), path.join(newDir, 'api'));
-    // 更新 media
-    // TODO: 后续废弃此部分处理，改用 assets
-    await emptyDir(path.join(newDir, 'media'));
-    await copy(path.join(currentDir, 'build/media'), path.join(newDir, 'media'));
   } catch (error) {
     core.setFailed(error.message);
   }

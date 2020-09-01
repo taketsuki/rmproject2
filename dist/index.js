@@ -1795,9 +1795,6 @@ function deployFrontend(oldDir, newDir, currentDir) {
             yield fs_extra_1.copy(path.join(currentDir, 'build'), newDir);
             // 保留 api 文件夹
             yield fs_extra_1.copy(path.join(oldDir, 'api'), path.join(newDir, 'api'));
-            // 保留 media 文件夹
-            // TODO: 后续废弃此部分处理，改用 assets
-            yield fs_extra_1.copy(path.join(oldDir, 'media'), path.join(newDir, 'media'));
             // 保留 assets 文件夹
             yield fs_extra_1.copy(path.join(oldDir, 'assets'), path.join(newDir, 'assets'));
         }
@@ -1815,10 +1812,6 @@ function deployBackend(oldDir, newDir, currentDir) {
             // 更新 api
             yield fs_extra_1.emptyDir(path.join(newDir, 'api'));
             yield fs_extra_1.copy(path.join(currentDir, 'build/api'), path.join(newDir, 'api'));
-            // 更新 media
-            // TODO: 后续废弃此部分处理，改用 assets
-            yield fs_extra_1.emptyDir(path.join(newDir, 'media'));
-            yield fs_extra_1.copy(path.join(currentDir, 'build/media'), path.join(newDir, 'media'));
         }
         catch (error) {
             core.setFailed(error.message);
