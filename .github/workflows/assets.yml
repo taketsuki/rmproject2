@@ -1,0 +1,23 @@
+# Upload latest assets to gh-pages
+
+name: Assets Update
+
+on:
+  push:
+    branches: [ assets ]
+    paths-ignore:
+    - '.github/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: deploy to page branch
+      uses: miaowm5/rmproject2@action
+      with:
+        deploy_type: 'assets'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
