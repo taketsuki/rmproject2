@@ -1,7 +1,7 @@
 {
   "name": "in cremonica mono+",
   "logo": "1.gif",
-  "owner": "in cremonica mono+",
+  "owner": "in cremonica mono+\\木下たまき",
   "language": [
     "日语"
   ],
@@ -24,8 +24,9 @@
       ]
     }
   ],
-  "author": "喵呜喵5",
-  "updateTime": "2020.8.17",
+  "author": "竹月の葉",
+  "updateTime": "2022.4.16",
   "comment": [],
-  "url2": "http://cremona.mond.jp/web/music/sample-music.html"
+  "url2": "https://web.archive.org/web/20210415174155/http://cremona.mond.jp/icmo/",
+  "close": true
 }
